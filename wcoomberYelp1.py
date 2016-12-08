@@ -5,7 +5,7 @@ import random
 import string
 import json
 
-filename = 'yelp_academic_dataset_business.json'
+filename = 'yelp_academic_dataset_business2.json'
 
 def get_file_p(name):
 	currentDirPath = os.getcwd()
@@ -18,99 +18,43 @@ i = 0
 
 businesses = []
 
-for line in open('yelp_academic_dataset_business.json', 'r'):
+for line in open(filename, 'r'):
         businesses.append(json.loads(line))
+
+data = []
+
+with open(filename) as f:
+    for line in f:
+        data.append(json.loads(line))
 
 print('helloWorld1')
 print(businesses)
 print('helloWorld2')
 
-"""
-with open(fullpath) as f:
-        data = json.load(f)
 
-        print(data)
+print(len(businesses))
+businessesDictionary = dict()
 
-##########################################
-        dr = []
-        ps = []
-        sb = []
-        mbb = []
-        psb = []
-        wc = []
-        wto = []
-        fc = []
+for i in range(len(businesses)):
+    print(i, businesses[i]['name'])
+    #print(i, businesses[i])
 
-        drCount = 0
-        psCount = 0
-        sbCount = 0
-        mbbCount = 0
-        psbCount = 0
-        wcCount = 0
-        wtoCount = 0
-        fcCount = 0
-        
-        sbMbbCount = 0
+print(businesses[0].keys())
+print(businesses[0]['name'])
+print(businesses[0]['categories'])
+print(businesses[0]['categories'][1])
 
-        for row in readCSV:
-                dr1 = row[0]
-                ps1 = row[1]
-                sb1 = row[2]
-                mbb1 = row[3]
-                psb1 = row[4]
-                wc1 = row[5]
-                wto1 = row[6]
-                fc1 = row[7]
+print(businesses[1]['business_id'])
 
-                if dr1 == 'T':
-                        drCount = drCount + 1
+def getBusinessID(name):
+    for i in range(len(businesses)):
+        if( businesses[i]['name'] == 'Emil\'s Lounge':
+            print(i, businesses[i]['name'])
 
-                if ps1 == 'T':
-                        psCount = psCount + 1
-                if sb1 == 'T':
-                        sbCount = sbCount + 1
+	return file_path
 
-                if mbb1 == 'T':
-                        mbbCount = mbbCount + 1
-                if psb1 == 'T':
-                        psbCount = psbCount + 1
+#some test code that searches for dravosburg
+#x = next((item for item in businesses if item["city"] == "Dravosburg"))
+#print(x)
 
-                if wc1 == 'T':
-                        wcCount = wcCount + 1
-                if wto1 == 'T':
-                        wtoCount = wtoCount + 1
-
-                if fc1 == 'T':
-                        fcCount = fcCount + 1  
-
-                if sb1 == 'T' and mbb1 == 'T':
-                	sbMbbCount =  sbMbbCount + 1     
-
-                dr.append(dr1)
-                ps.append(ps1)
-                sb.append(sb1)
-                mbb.append(mbb1)
-                psb.append(psb1)
-                wc.append(wc1)
-                wto.append(wto1)
-                fc.append(fc1)
-
-#print(dr)
-print(drCount)
-#print(ps)
-print(psCount)
-#print(sb)
-print(sbCount)
-#print(mbb)
-print(mbbCount)
-#print(psb)
-print(psbCount)
-#print(wc)
-print(wcCount)
-#print(wto)
-print(wtoCount)
-#print(fc)
-print(fcCount)
-print('sbMbbCount:'+str(sbMbbCount))
-"""
 
