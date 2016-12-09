@@ -39,16 +39,16 @@ filenameBusiness = 'yelp_academic_dataset_business.json'
 filenamePicJSON = '2016_yelp_dataset_challenge_photos\photo_id_to_business_id.json'
 
 #Change this testBusinessID to the exact string Business_ID of the business that you want to open photos for
-#testBusinessID = '52oCXlQmP2kXt53xpl9a3w'
-testBusinessID = 'KayYbHCt-RkbGcPdGOThNg'
+testBusinessID = '52oCXlQmP2kXt53xpl9a3w'
+#testBusinessID = 'KayYbHCt-RkbGcPdGOThNg'
 #Change this testBusinessName to the exact string name of the business that you want to open photos for
 #EG. 'Flamingo Las Vegas Hotel & Casino' and 'NGJDjdiDJHmN2xxU7KauuA'
-#testBusinessName = 'Hazelrock Coffee + Sweets'
-testBusinessName = 'Flamingo Las Vegas Hotel & Casino'
+testBusinessName = 'Hazelrock Coffee + Sweets'
+#testBusinessName = 'Flamingo Las Vegas Hotel & Casino'
 
 
 #Star rating of the restaurants must be equal to or greater than this value to get their images opened.
-loadThreshold = 1.9
+loadThreshold = 3.0
 
 maxNumberOfPicsToLoad = 5
 
