@@ -1,2 +1,4 @@
 # 582Wcoomber3
-test2
+
+
+The program requires this folder structure. SEE THE UPLOADED PICTURE 'http://imgur.com/a/smWSi'
