@@ -6,6 +6,18 @@ import geocoder as gc
 from randomdict import RandomDict
 from PIL import Image
 from sets import Set
+from yelp.client import Client
+from yelp.oauth1_authenticator import Oauth1Authenticator
+import urllib
+import multiprocessing as mp
+
+auth = Oauth1Authenticator(
+    consumer_key ="xGvwgYto_TuFbY0NAlt52Q",
+    consumer_secret = "xu37zoQA1DLjS63dUYhroQKuf6g",
+    token = "ES1CY7hh753YstdI0EyLlTes4XHVGBup",
+    token_secret = "fnkhIHuwzeCowJc40Gnx7oeKKAg"
+)
+client = Client(auth)
 
 DEBUG = True
 
@@ -31,6 +43,10 @@ testBusinessName = 'Hazelrock Coffee + Sweets'
 loadThreshold = 3.0
 
 maxNumberOfPicsToLoad = 5
+
+def form_params(name, lat, lon):
+    params = { 'term':name, 'lang':'en', 'cll':'%f,%f'.format(lat, lon)}
+    return params
 
 def getfile(name, dtype='json'):
     cwd = os.getcwd()
@@ -107,9 +123,6 @@ def get_obj_business():
                 arr.append(obj)
     return arr
 
-def debug():
-   return
-
 class User():
     def __init__(self, uid):
         self.uid = uid
@@ -140,17 +153,15 @@ class User():
 
 def DM(msg):
     if DEBUG:
-        print "DEBUG: %s" % msg
+        print "DEBUG>> %s" % msg
 
-def get_obj_review():
-    bus = {}
-    r_bus = RandomDict()
-    reviews = {}
-    users = {}
-    users_map = {}
-    count = 0 
-
-    DM('initializing....')
+bus = {}
+r_bus = RandomDict()
+users = {}
+ 
+def fetch_reviews():
+    count = 0
+    DM('fetching reviews...')
     with open(getfile(JSON_review)) as fin:
         for line in fin:
             obj = json.loads(line)
@@ -159,18 +170,16 @@ def get_obj_review():
             try:
                 user_obj = users[uid]
             except Exception as e:
-                # if new user? create object and add to hash table
+            # if new user? create object and add to hash table
                 user_obj = User(uid)
             user_obj.add_bid(bid)
             users[uid] = user_obj
+    # TODO: optimize it via memoization (w/ slicing)
     DM('done fetching reviews...')
 
-    # for k, v in users.items():
-    #     count += 1 
-    #     print k, v.get_num_reviews()
-    #     if count > 100:
-    #         return
-
+def fetch_business():
+    count = 0
+    DM("fetching businesses...")
     with open(getfile(JSON_business)) as fin:
         for line in fin:
             obj = json.loads(line)
@@ -178,7 +187,24 @@ def get_obj_review():
             bid = obj['business_id']
             bus[bid] = obj
             r_bus[bid] = obj
-    DM("done sorting business... {}".format(len(bus)))
+    DM("done fetching business... {}".format(len(bus)))
+
+def get_obj_review():
+    count = 0 
+    jobs = []
+
+    DM('initializing....')
+    # mp.log_to_stderr(logging.DEBUG)
+    # jobs.append(mp.Process(name='review', target=fetch_reviews))
+    # jobs.append(mp.Process(name='business', target=fetch_business))
+    # for p in jobs:
+    #     p.start()
+    
+    # for p in jobs:
+    #     p.join()
+    
+    fetch_reviews()
+    fetch_business()
 
     tmp_map = {}
     tmp_bus = {}
@@ -188,7 +214,6 @@ def get_obj_review():
         obj = r_bus.random_value()
         bid = obj['business_id']
         stars = obj['stars']
-        print '~~~~~',bid,'~~~~~~'
         tmp_map[bid] = stars
         tmp_bus[bid] = obj
 
@@ -199,9 +224,6 @@ def get_obj_review():
     #         print_list.append(candidiate)
     # print print_list
 
-    for k, v in tmp_bus.items():
-        obj = v 
-        print k, '>> ', obj['name'], obj['stars']
     print '==============================================================='
     new_tmp = sorted(tmp_map.items(), key=lambda x: x[1], reverse=True)
     new_list = []
@@ -220,6 +242,15 @@ def get_obj_review():
     target_bus = tmp_bus[new_list[choice]]
     target_bid = target_bus['business_id']
     print 'target is... ', target_bid
+    params = form_params(target_bus['name'], target_bus['latitude'],
+            target_bus['longitude'])
+    resp = client.search(target_bus['city'], **params)
+    for a in resp.businesses:
+        image_url = a.image_url
+        if image_url is not None:
+            image_url = image_url.replace('ms.jpg', 'o.jpg')
+            print a.id, a.name
+            print image_url
 
     ''' given busieness id (bid), find *users* who have written down the
     review'''
@@ -228,7 +259,7 @@ def get_obj_review():
         if obj.has_bid(target_bid):
             common_users.append(obj)
     
-    common_bids = []
+    common_bids = {}
     count = 0 
     for obj in common_users:
         count += 1
@@ -237,15 +268,36 @@ def get_obj_review():
             answer, commons = obj.has_common(obj2)
             if answer:
                 for common in commons:
-                    if common not in common_bids:
-                        common_bids.append(common)
-    print 'common bids...'
-    print common_bids
+                    if common != target_bid:
+                        from_map = None
+                        try: # dict = (bid, counts)
+                            common_bids[common] += 1
+                        except Exception as e:
+                            # DNE
+                            common_bids[common] = 1
+                        
+    new_common_bids = sorted(common_bids.items(), key=lambda x: x[1], reverse=True)
+    # DM('common bids len: {}'.format(len(common_bids)))
+    count = 0
+    for k, v in new_common_bids:
+        count += 1 
+        obj = bus[k]
+        print count, 'count. {}'.format(v), obj['name'], obj['stars']
+        if count > 15:
+            break
+    
+    # count < 15? fetch more from random...
+    while count < 15:
+        count += 1
+        obj = r_bus.random_value()
+        bid = obj['business_id']
+        stars = obj['stars']
+        print count, 'count. {}'.format(0), bid, stars
+        tmp_map[bid] = stars
+        tmp_bus[bid] = obj
 
 
-#     for k, obj in common_users.items():
-#         print obj.get_uid(), obj.get_bids()
-
+    
     return
 
     with open(getfile(JSON_review)) as fin:
@@ -274,7 +326,6 @@ def get_obj_review():
     # print 'done sorting users...', len(users)
    
     return
-
 
 
 ''' notes:
@@ -414,74 +465,51 @@ def main():
         insertIntoIDNames(tempID, businesses[i]['name'], IDNames)
         insertIntoNamesID(tempID, businesses[i]['name'], namesID)
         insertIntoBusinessIDStars(tempID, businesses[i]['stars'], businessIDStars)
-
-    '''
-#print(IDNames)
-#print('helloWorld4')
-#print(namesID)
-
-
-    print(len(businesses))
-    print(IDNames['3ZVKmuK2l7uXPE6lXY4Dbg'])
-    print(namesID['Grand View Golf Club'])
-
-    print(businesses[0].keys())
-    print(businesses[0]['name'])
-    print(businesses[0]['categories'])
-    print(businesses[0]['categories'][1])
-
-    print(businesses[1]['business_id'])
-
-    tempID = getBusinessID('Grand View Golf Club')
-    print(tempID)
-
-
-#print(len(businessIDPhotoID))
-
-#testImagePath = getfile('test.jpg')
-#This PIL code block doesn't work on windows10
-#im = Image.open(testImagePath)
-#im.show
-
-#This webbrowser work around uses windows viewer to open the photo
-#webbrowser.open(testImagePath)
-#print(testImagePath)
-
-
-#testing webbrowser.open function for opening exact file path
-#webbrowser.open('C:\\Users\\wesle_000\\Documents\\582Wcoomber3\\2016_yelp_dataset_challenge_photos\\tkSP0R3EFRbkHGBkKiva_w.jpg')
-    print(IDNames['NGJDjdiDJHmN2xxU7KauuA'])
-    '''
-
-
-
-
-
-
-#Use the business ID as a key into 'businessIDPhotoID' to get all the photo_id's associated with the business
-#print('gettingAllBusinessPhotosTest1', businessIDPhotoID[testBusinessID])
-#print('hi3', businessIDPhotoID[namesID['Grand View Golf Club'][0]])
-
-
-
-
-#This block of code is different ways to open/load all the photos of the business 1)by ID 2)by name using namesID dict
-#print(IDNames[testBusinessID])
-####################################################
-#showPhotosOfBusinessID(testBusinessID)
-    showPhotosOfBusinessID(namesID[testBusinessName][0])
-
-#This shows how to get the Star Rating for a business from its business_ID or its name
-#print(businessIDStars[namesID[testBusinessName][0]])
-#print(businessIDStars[testBusinessID])
-
-
-#some test code that searches for dravosburg
-#x = next((item for item in businesses if item["city"] == "Dravosburg"))
-#print(x)
     return
 
+def fetch_pics(obj):
+    # bid = obj['business_id']
+    # name = obj['name']
+    # city = obj['city']
+    # lat = obj['latitude']
+    # lon = obj['longitutde']
+    bid = "Y9e3DMJexlctd9pAudL-5A"
+    name = "Papa John's Pizza"
+    city = "Las Vegas"
+    lat = 36.0211192
+    lon = -115.1190908
+
+    params = form_params(name, lat, lon)
+    dir_name = mkdir(bid)
+
+    resp = client.search(city, **params)
+    list_urls = []
+    for a in resp.businesses:
+        image_url = a.image_url
+        if image_url is not None:
+            image_url = image_url.replace('ms.jpg', 'o.jpg')
+            print a.id, a.name
+            list_urls.append(image_url)
+
+    count = 0 
+    for url in list_urls:
+        urllib.urlretrieve(url, "{}/{}.jpg".format(dir_name, count))
+        count += 1
+    DM("done fetching {} images in {}".format(len(list_urls), dir_name))
+       
+def mkdir(bid):
+    cwd = os.getcwd()
+    if os.path.isdir(cwd + '/.tmp') is False:
+        os.mkdir(cwd + '/.tmp')
+    name = cwd + '/.tmp/'+ bid
+    if os.path.isdir(name) is False:
+        os.mkdir(name)
+    return name
 
 if __name__ == '__main__':
-    main()
+    fetch_pics(None)
+    # mkdir("Y9e3DMJexlctd9pAudL-5A")
+    # main()
+    # main_job = mp.Process(name='main', target=main)
+    # main_job.start()
 

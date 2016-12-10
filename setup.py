@@ -6,6 +6,7 @@ requires = [
         'pillow',
         'geocoder',
         'randomdict',
+        'yelp',
         ]
 
 setup(
