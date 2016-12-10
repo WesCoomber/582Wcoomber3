@@ -1,7 +1,8 @@
 # 582Wcoomber3
 
 ## Requirements
-* python package pillow
+* python verison 2.7 (yes, specific version)
+* python packages: pillow
 
 
 
