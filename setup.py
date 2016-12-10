@@ -3,16 +3,16 @@
 from setuptools import setup, find_packages
 
 requires = [
-        'pillow'
+        'pillow',
         'geocoder',
         'randomdict',
         ]
 
 setup(
-        name='Speculation on Yelp-steroids'
+        name='Speculation on Yelp-steroids',
         description='for the Yelp datasets.',
         author='Yelp',
-        # url='https://github.com/Yelp/dataset-examples',
+        url='git@github.com:WesCoomber/582Wcoomber3.git',
         packages=find_packages(),
         install_requires=requires,
         tests_require=requires,
