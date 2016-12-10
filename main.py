@@ -7,6 +7,8 @@ from randomdict import RandomDict
 from PIL import Image
 from sets import Set
 
+DEBUG = True
+
 ''' custom dirs '''
 JSON_DIR = 'json'
 PIC_DIR = 'photo'
@@ -130,11 +132,15 @@ class User():
     def has_common(self, b):
         common = set(self.bids).intersection(b.get_bids())
         if len(common) > 0:
-            return True
-        return False
+            return (True, common)
+        return (False, None)
 
     def get_num_reviews(self):
         return len(self.bids)
+
+def DM(msg):
+    if DEBUG:
+        print "DEBUG: %s" % msg
 
 def get_obj_review():
     bus = {}
@@ -144,6 +150,7 @@ def get_obj_review():
     users_map = {}
     count = 0 
 
+    DM('initializing....')
     with open(getfile(JSON_review)) as fin:
         for line in fin:
             obj = json.loads(line)
@@ -154,8 +161,9 @@ def get_obj_review():
             except Exception as e:
                 # if new user? create object and add to hash table
                 user_obj = User(uid)
-            user_obj.add_bus(bid)
+            user_obj.add_bid(bid)
             users[uid] = user_obj
+    DM('done fetching reviews...')
 
     # for k, v in users.items():
     #     count += 1 
@@ -170,7 +178,7 @@ def get_obj_review():
             bid = obj['business_id']
             bus[bid] = obj
             r_bus[bid] = obj
-    print 'done sorting businesses...', len(bus)
+    DM("done sorting business... {}".format(len(bus)))
 
     tmp_map = {}
     tmp_bus = {}
@@ -209,8 +217,36 @@ def get_obj_review():
     choice = input("select: ")
     choice -= 1
     print choice, new_list[choice], tmp_bus[new_list[choice]]
+    target_bus = tmp_bus[new_list[choice]]
+    target_bid = target_bus['business_id']
+    print 'target is... ', target_bid
 
-    common_users = {}
+    ''' given busieness id (bid), find *users* who have written down the
+    review'''
+    common_users = []
+    for k, obj in users.items():
+        if obj.has_bid(target_bid):
+            common_users.append(obj)
+    
+    common_bids = []
+    count = 0 
+    for obj in common_users:
+        count += 1
+        for i in range(count, len(common_users)):
+            obj2 = common_users[i]
+            answer, commons = obj.has_common(obj2)
+            if answer:
+                for common in commons:
+                    if common not in common_bids:
+                        common_bids.append(common)
+    print 'common bids...'
+    print common_bids
+
+
+#     for k, obj in common_users.items():
+#         print obj.get_uid(), obj.get_bids()
+
+    return
 
     with open(getfile(JSON_review)) as fin:
         for line in fin:
@@ -252,7 +288,6 @@ move to next selection (try to find common set of reviewers...)
 
 def main():
     get_obj_review()
-    debug()
     return 
 
     IDNames = {} # (business_id, name)
