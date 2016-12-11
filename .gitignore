@@ -1,3 +1,6 @@
+json/*
+*.pyc
+.*
 yelp_academic_dataset_business.json
 yelp_dataset_challenge_academic_dataset/._Dataset_Challenge_Academic_Dataset_Agreement.pdf
 yelp_dataset_challenge_academic_dataset/._Yelp_Dataset_Challenge_Terms_round_8.pdf
