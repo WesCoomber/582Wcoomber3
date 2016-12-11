@@ -6,12 +6,15 @@ import geocoder as gc
 from randomdict import RandomDict
 from PIL import Image
 from sets import Set
+from glob import glob
 from yelp.client import Client
 from yelp.oauth1_authenticator import Oauth1Authenticator
 import urllib
 import multiprocessing as mp
+from threading import Thread, Lock, Condition
 from slide import App
 import config
+from config import *
 
 auth = Oauth1Authenticator(
     consumer_key = config.consumer_key,
@@ -61,11 +64,6 @@ class User():
     def get_num_reviews(self):
         return len(self.bids)
 
-def DM(msg):
-    if DEBUG:
-        print "DEBUG>> %s" % msg
-
-
 ################# local file related ops ######################
 def getfile(name, dtype='json'):
     cwd = os.getcwd()
@@ -84,11 +82,9 @@ def mkdir(bid):
 
 ################# remote yelp related ops ######################
 def form_params(name, lat, lon):
-    print lat, lon
     geo = '{},{}'.format(lat,lon)
     params = { 'term':name, 'lang':'en', 'cll': geo}
-    if DEBUG:
-        print params
+    DM("params: {}".format(params))
     return params
 
 def fetch_pics(obj):
@@ -101,14 +97,13 @@ def fetch_pics(obj):
     params = form_params(name, lat, lon)
     dir_name = mkdir(bid)
 
-    print params
+    DM("fetching {} images in {}".format(name, dir_name))
     resp = client.search(city, **params)
     list_urls = []
     for a in resp.businesses:
         image_url = a.image_url
         if image_url is not None:
             image_url = image_url.replace('ms.jpg', 'o.jpg')
-            print a.id, a.name
             list_urls.append(image_url)
 
     count = 0 
@@ -168,6 +163,37 @@ bus = {}
 r_bus = RandomDict()
 users = {}
 
+################# prefetching stuff ######################
+# def prefetch(bus_list, bus_map): 
+
+################# demo purpose CUI ops ######################
+''' takes bus_list, return bus object'''
+def show_list(bus_map): 
+    count = 0
+    new_list = [] # contains bids
+    for k,v in bus_map.items():
+        # k == bid, v = obj
+        count += 1
+        bid = k
+        obj = v
+        new_list.append(bid)
+        print count, obj['name'], obj['stars'], obj['review_count']
+
+    # choice == bid for now...
+    choice = 0
+    while 1:
+        choice = input("select: ")
+        if choice <= 0 or choice > len(bus_map): 
+            print "Woooops! Retry mannnnn!"
+        else:
+        #     print choice
+            break
+    choice -= 1
+    bid = new_list[choice]
+    bus_obj = bus_map[bid]
+    DM("{} {} {}".format(choice, bid, bus_obj))
+    return bus_obj
+ 
 ################# slide wrapper (execute only in main process) ######################
 def get_obj_review():
     count = 0 
@@ -186,6 +212,7 @@ def get_obj_review():
     fetch_reviews()
     fetch_business()
 
+################ starting ..>! 
     tmp_map = {}
     tmp_bus = {}
     count = 0
@@ -197,46 +224,41 @@ def get_obj_review():
         tmp_map[bid] = stars
         tmp_bus[bid] = obj
 
-    # print_list = []
-    # while len(tmp_list) != len(print_list):
-    #     candidate = max(tmp_list, key=lambda item:item['stars'])
-    #     if candidate not in print_list:
-    #         print_list.append(candidiate)
-    # print print_list
-
     print '==============================================================='
     new_tmp = sorted(tmp_map.items(), key=lambda x: x[1], reverse=True)
-    new_list = []
+    steroids = []
+    thrs = 5
     count = 0
     for k,v in new_tmp:
-        count += 1
+        # v is "stars" 
         bid = k
         obj = tmp_bus[bid]
-        new_list.append(bid)
-        print count, obj['name'], obj['stars'], obj['review_count']
+        if v > 2.0:
+        # if count < thrs:
+            steroids.append(obj)
+        count += 1
+    
+    jobs = []
+    for obj in steroids:
+        t = Thread(name=obj['name'], target=fetch_pics, args=(obj, ))
+        jobs.append(t)
+        t.start()
 
-    # choice == bid for now...
-    choice = input("select: ")
-    choice -= 1
-    print choice, new_list[choice], tmp_bus[new_list[choice]]
-    target_bus = tmp_bus[new_list[choice]]
+    target_bus = show_list(tmp_bus)
     target_bid = target_bus['business_id']
-    print 'target is... ', target_bid
+    DM("target selected is {}".format(target_bid))
 
-    check_bid = fetch_pics(target_bus)
-    # bid = fetch_pics(bid, name, city, lat, lon)
-    # params = form_params(target_bus['name'], target_bus['latitude'],
-    #         target_bus['longitude'])
-    # resp = client.search(target_bus['city'], **params)
-    # for a in resp.businesses:
-    #     image_url = a.image_url
-    #     if image_url is not None:
-    #         image_url = image_url.replace('ms.jpg', 'o.jpg')
-    #         print a.id, a.name
-    #         print image_url
-    if check_bid != target_bid:
-        print "ERROR: bid has been changed...!" 
-        exit(-1)
+    for t in jobs:
+        t.join()
+
+    if target_bus not in steroids:
+        print ("Steroid-miss: %s " % target_bus['name'])
+        eval_start = time.time()
+        check_bid = fetch_pics(target_bus)
+        print ('Time taken: {}', time.time() - eval_start)
+        if check_bid != target_bid:
+            print "ERROR: bid has been changed...!" 
+            exit(-1)
 
     # slide = mp.Process(name='slide', target=slide_worker, args=(target_bid, ))
     # slide.start()
@@ -443,8 +465,26 @@ def debug():
     bid = fetch_pics(bid, name, city, lat, lon)
     App(bid).run()
 
+def init_clean():
+    cwd = os.getcwd()
+    folders = glob(cwd + "/.tmp/*")
+    DM("cleaning .tmp folders...!")
+    for folder in folders:
+        for jpg in [ f for f in os.listdir(folder) if f.endswith(".jpg") ]:
+            name = folder + "/" + jpg
+            os.remove(name)
+        os.rmdir(folder)
+    DM("done cleaning .tmp folders...!")
+    return
+
+def init():
+    init_clean()
+    print "Initializing environments for the program..."
+    return
+
 if __name__ == '__main__':
     # debug()
+    init()
     main()
     # main_job = mp.Process(name='main', target=main)
     # main_job.start()

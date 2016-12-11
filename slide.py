@@ -4,17 +4,15 @@ from PIL import Image, ImageTk, ImageFile
 from itertools import cycle
 from os import listdir
 from os.path import isfile, join
-import config
 import Tkinter as tk
 import os
-
-DEBUG = config.debug
+import config
+from config import *
 
 class App(tk.Tk):
     start = None
     # set milliseconds time between slides
-    # delay = 1000
-    delay = 100
+    delay = config.slide_delay
     # upper left corner coordinates of app window
     x = 100
     y = 50
@@ -27,8 +25,7 @@ class App(tk.Tk):
         for i in only_files:
             n = mypath + "/" + i
             image_files.append(n)
-        if DEBUG:
-            print 'preseting dir %s' % (folder)
+        DM('preseting dir {}'.format(folder))
 
         # the root will be self
         tk.Tk.__init__(self)
@@ -56,8 +53,7 @@ class App(tk.Tk):
         # shows the image filename, but could be expanded
         # to show an associated description of the image
         self.title(img_name)
-        if DEBUG:
-            print 'presenting %s ' % (img_name)
+        DM('presenting {}'.format(img_name))
         self.after(self.delay, self.show_slides)
 
     def run(self):
