@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 
-import os, csv, random, string, json, webbrowser
-import io, time, operator
+import json, random, time, string
+import os, sys, signal, io, operator
 import geocoder as gc
 from randomdict import RandomDict
 from PIL import Image
@@ -110,6 +110,21 @@ def fetch_pics(obj):
     for url in list_urls:
         urllib.urlretrieve(url, "{}/{}.jpg".format(dir_name, count))
         count += 1
+
+    if count < 10:
+        params = form_params(city, lat, lon)
+        resp = client.search(city, **params)
+        list_urls = []
+        for a in resp.businesses:
+            image_url = a.image_url
+            if image_url is not None:
+                image_url = image_url.replace('ms.jpg', 'o.jpg')
+                list_urls.append(image_url)
+        for url in list_urls:
+            urllib.urlretrieve(url, "{}/{}.jpg".format(dir_name, count))
+            count += 1
+
+
     DM("done fetching {} images in {}".format(len(list_urls), dir_name))
     return bid
 
@@ -183,13 +198,13 @@ def show_list(bus_map):
         bid = k
         obj = v
         new_list.append(bid)
-        print "%2d. %s [%.1f, %d]" % (count, obj['name'], obj['stars'], \
+        print "    %2d. %s [%.1f, %d]" % (count, obj['name'], obj['stars'], \
             obj['review_count'])
 
     # choice == bid for now...
     choice = 0
     while 1:
-        choice = input("select: ")
+        choice = input("==> Select: ")
         if choice <= 0 or choice > len(bus_map): 
             print "Woooops! Retry mannnnn!"
         else:
@@ -209,6 +224,9 @@ def show_list(bus_map):
     2. review_counts
     3. common reviews'''
 def get_steroids(bus_map):
+    if PREFETCH == False: # if disabled...
+        return []
+
     tmp_map = {}
     for k, v in bus_map.items():
         tmp_map[k] = v['stars']
@@ -237,6 +255,53 @@ def exec_steroids(steroids):
     return jobs
 
 
+def get_bus_map(r_bus, commons): 
+    tmp_bus = {}
+    NUM_BUS = 15
+    count = 0
+
+    if commons is not None:
+        for k, v in commons:
+            count += 1 
+            obj = bus[k]
+            tmp_bus[k] = obj
+            if count > NUM_BUS:
+                return tmp_bus
+        
+    # count < 15? fetch more from random...
+    for i in range(count, NUM_BUS):
+        obj = r_bus.random_value()
+        bid = obj['business_id']
+        tmp_bus[bid] = obj
+    return tmp_bus
+
+def get_commons(target):
+    ''' given busieness id (bid), find *users* who have written down the
+    review'''
+    common_users = []
+    for k, obj in users.items():
+        if obj.has_bid(target):
+            common_users.append(obj)
+    
+    common_bids = {}
+    count = 0 
+    for obj in common_users:
+        count += 1
+        for i in range(count, len(common_users)):
+            obj2 = common_users[i]
+            answer, commons = obj.has_common(obj2)
+            if answer:
+                for common in commons:
+                    if common != target:
+                        from_map = None
+                        try: # dict = (bid, counts)
+                            common_bids[common] += 1
+                        except Exception as e:
+                            # DNE
+                            common_bids[common] = 1
+    ret = sorted(common_bids.items(), key=lambda x: x[1], reverse=True)
+    return ret
+
 ################# slide wrapper (execute only in main process) ######################
 ''' notes:
 originally, we wanted to construct a hierarchy where a user selects 
@@ -260,111 +325,45 @@ def main():
     fetch_reviews()
     fetch_business()
 
+    commons = None
 ################ starting ..>! 
-    tmp_bus = {}
-    count = 0
-    while count < 15:
-        count += 1
-        obj = r_bus.random_value()
-        bid = obj['business_id']
-        stars = obj['stars']
-        tmp_bus[bid] = obj
+    while 1:
+        tmp_bus = get_bus_map(r_bus, None)
 
-    steroids = get_steroids(tmp_bus)
-    jobs = exec_steroids(steroids)
+        steroids = get_steroids(tmp_bus)
+        jobs = exec_steroids(steroids)
 
-    print '==============================================================='
-    target_bus = show_list(tmp_bus)
-    target_bid = target_bus['business_id']
-    DM("target selected is {}".format(target_bid))
+        print '==============================================================='
+        target_bus = show_list(tmp_bus)
+        target_bid = target_bus['business_id']
+        DM("target selected is {}".format(target_bid))
 
-    for t in jobs:
-        t.join()
+        for t in jobs:
+            t.join()
 
-    if target_bus not in steroids:
-        print ("Steroid-miss: %s " % target_bus['name'])
-        eval_start = time.time()
-        check_bid = fetch_pics(target_bus)
-        print ('Time taken: {}', time.time() - eval_start)
-        if check_bid != target_bid:
-            print "ERROR: bid has been changed...!" 
-            exit(-1)
+        if target_bus not in steroids or PREFETCH is False:
+            print ("Steroid-miss: %s " % target_bus['name'])
+            eval_start = time.time()
+            check_bid = fetch_pics(target_bus)
+            print ('Time taken: {}', time.time() - eval_start)
+            if check_bid != target_bid:
+                print "ERROR: bid has been changed...!" 
+                exit(-1)
 
-    ''' TODO: 
-    - multiprocessing:
-        1. fetching review & business concurrently
-        2. manager process for user interaction
-    '''
+        ''' TODO: 
+        - multiprocessing:
+            1. fetching review & business concurrently
+            2. manager process for user interaction
+        '''
 
-    # slide = mp.Process(name='slide', target=slide_worker, args=(target_bid, ))
-    # slide.start()
-    slide_worker(target_bid)
+        # slide = mp.Process(name='slide', target=slide_worker, args=(target_bid, ))
+        # slide.start()
+        slide_worker(target_bid)
 # = = = = = == = = = == = =  == = = = == = == = = == = = == = = = == = = = =#
-
-    ''' given busieness id (bid), find *users* who have written down the
-    review'''
-    common_users = []
-    for k, obj in users.items():
-        if obj.has_bid(target_bid):
-            common_users.append(obj)
-    
-    common_bids = {}
-    count = 0 
-    for obj in common_users:
-        count += 1
-        for i in range(count, len(common_users)):
-            obj2 = common_users[i]
-            answer, commons = obj.has_common(obj2)
-            if answer:
-                for common in commons:
-                    if common != target_bid:
-                        from_map = None
-                        try: # dict = (bid, counts)
-                            common_bids[common] += 1
-                        except Exception as e:
-                            # DNE
-                            common_bids[common] = 1
-    new_common_bids = sorted(common_bids.items(), key=lambda x: x[1], reverse=True)
-    # slide.join()
-
-    DM('common bids len: {}'.format(len(common_bids)))
-    count = 0
-    for k, v in new_common_bids:
-        count += 1 
-        obj = bus[k]
-        print count, 'count. {}'.format(v), obj['name'], obj['stars']
-        if count > 15:
-            break
-    
-    # count < 15? fetch more from random...
-    while count < 15:
-        count += 1
-        obj = r_bus.random_value()
-        bid = obj['business_id']
-        stars = obj['stars']
-        print count, 'count. {}'.format(0), bid, stars
-        tmp_map[bid] = stars
-        tmp_bus[bid] = obj
-    
-    return
-
-    with open(getfile(JSON_review)) as fin:
-        for line in fin:
-            obj = json.loads(line)
-            bid = obj['business_id']
-            uid = obj['user_id']
-            if bid == tmp_bus[new_list[choice]]:
-                users[uid] += 1
-    print 'done finding reviews...'
-
-    vals = sorted(users.items(), key=operator.itemgetter(1), reverse=True)
-    count = 0 
-    for k, v in vals:
-        count += 1 
-        print k, v 
-        if count > 100:
-            return
-  
+        # slide.join()
+        commons = get_commons(target_bid)
+        DM('common bids len: {}'.format(len(commons)))
+ 
     return
 
 
@@ -386,8 +385,14 @@ def init():
     print "Initializing environments for the program..."
     return
 
+def handler(singnum, frame):
+    print ("closing the program...")
+    sys.exit(0)
+
 if __name__ == '__main__':
     # debug()
+    signal.signal(signal.SIGINT, handler)
+
     init()
     main()
     # main_job = mp.Process(name='main', target=main)
