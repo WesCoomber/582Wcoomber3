@@ -10,16 +10,19 @@ from yelp.client import Client
 from yelp.oauth1_authenticator import Oauth1Authenticator
 import urllib
 import multiprocessing as mp
+from slide import App
+import config
 
 auth = Oauth1Authenticator(
-    consumer_key ="xGvwgYto_TuFbY0NAlt52Q",
-    consumer_secret = "xu37zoQA1DLjS63dUYhroQKuf6g",
-    token = "ES1CY7hh753YstdI0EyLlTes4XHVGBup",
-    token_secret = "fnkhIHuwzeCowJc40Gnx7oeKKAg"
+    consumer_key = config.consumer_key,
+    consumer_secret = config.consumer_secret,
+    token = config.token,
+    token_secret = config.token_secret
 )
 client = Client(auth)
 
-DEBUG = True
+DEBUG = config.debug
+PREFETCH = config.prefetch
 
 ''' custom dirs '''
 JSON_DIR = 'json'
@@ -28,100 +31,7 @@ PIC_DIR = 'photo'
 JSON_business   = 'yelp_academic_dataset_business.json'
 JSON_review     = 'yelp_academic_dataset_review.json'
 JSON_user       = 'yelp_academic_dataset_user.json'
-JSON_picture = 'photo_id_to_business_id.json'
-
-#Change this testBusinessID to the exact string Business_ID of the business that you want to open photos for
-testBusinessID = '52oCXlQmP2kXt53xpl9a3w'
-#testBusinessID = 'KayYbHCt-RkbGcPdGOThNg'
-#Change this testBusinessName to the exact string name of the business that you want to open photos for
-#EG. 'Flamingo Las Vegas Hotel & Casino' and 'NGJDjdiDJHmN2xxU7KauuA'
-testBusinessName = 'Hazelrock Coffee + Sweets'
-#testBusinessName = 'Flamingo Las Vegas Hotel & Casino'
-
-
-#Star rating of the restaurants must be equal to or greater than this value to get their images opened.
-loadThreshold = 3.0
-
-maxNumberOfPicsToLoad = 5
-
-def form_params(name, lat, lon):
-    params = { 'term':name, 'lang':'en', 'cll':'%f,%f'.format(lat, lon)}
-    return params
-
-def getfile(name, dtype='json'):
-    cwd = os.getcwd()
-    if dtype == 'picture':
-        return cwd + '/' + PIC_DIR + '/' + name
-    return cwd + '/' + JSON_DIR + '/' + name
-
-def getBusinessID(name):
-    for i in range(len(businesses)):
-        if( businesses[i]['name'] == name):
-            #print(businesses[i]['name'], businesses[i]['business_id'])
-            foundRestaurant = businesses[i]['business_id']
-            return foundRestaurant
-
-def insertIntoIDNames(id, name, aDict):
-    if not id in aDict:
-        aDict[id] = [name]
-    else:
-        aDict[id].append(name)
-
-def insertIntoBusinessIDStars(id, stars, aDict):
-    if not id in aDict:
-        aDict[id] = [stars]
-    else:
-        aDict[id].append(stars)
-
-def insertIntoBusinessIDPhotoID(id, photoID, aDict):
-    if not id in aDict:
-        aDict[id] = [photoID]
-    else:
-        aDict[id].append(photoID)
-
-
-def insertIntoNamesID(id, name, aDict):
-    if not name in aDict:
-        aDict[name] = [id]
-    else:
-        aDict[name].append(id)
-
-def showPhotosOfBusinessID(businessID):
-    if ((businessIDStars[businessID][0]) >= loadThreshold):
-        if(len(businessIDPhotoID[businessID]) <= maxNumberOfPicsToLoad):
-            print(businessIDStars[businessID][0], 'rating greater than or equal to loadThreshold value of ', loadThreshold)
-            for i in range(len(businessIDPhotoID[businessID])):
-                tempImagePath = getfile((businessIDPhotoID[businessID])[i]+'.jpg',dtype='picture')
-                webbrowser.open(tempImagePath)
-                #print(i,tempImagePath)
-        else:
-            print(businessIDStars[businessID][0], 
-                'rating greater than or equal to loadThreshold value of ', loadThreshold)
-            for i in range(maxNumberOfPicsToLoad):
-                tempImagePath = getfile((businessIDPhotoID[businessID])[i] +\
-                        '.jpg', dtype='picture')
-                webbrowser.open(tempImagePath)
-                # print(i,tempImagePath)
-    else:
-        print(businessIDStars[businessID][0], 'rating less than loadThreshold value of ', 
-            loadThreshold, 'Program will not open the photos for the business!')
-
-''' work in progress function, to do if more time--
-def getPhotosForBusiness(businessID, aDict):
-    if not name in aDict:
-        aDict[name] = [id]
-    else:
-        aDict[name].append(id)
-'''
-
-def get_obj_business():
-    arr = []
-    with open(getfile(JSON_business)) as fin:
-        for line in fin:
-            obj = json.loads(line)
-            if len(obj['state']) == 2 and 'Restaurants' in obj['categories']:
-                arr.append(obj)
-    return arr
+JSON_picture    = 'photo_id_to_business_id.json'
 
 class User():
     def __init__(self, uid):
@@ -155,9 +65,68 @@ def DM(msg):
     if DEBUG:
         print "DEBUG>> %s" % msg
 
-bus = {}
-r_bus = RandomDict()
-users = {}
+
+################# local file related ops ######################
+def getfile(name, dtype='json'):
+    cwd = os.getcwd()
+    if dtype == 'picture':
+        return cwd + '/' + PIC_DIR + '/' + name
+    return cwd + '/' + JSON_DIR + '/' + name
+
+def mkdir(bid):
+    cwd = os.getcwd()
+    if os.path.isdir(cwd + '/.tmp') is False:
+        os.mkdir(cwd + '/.tmp')
+    name = cwd + '/.tmp/'+ bid
+    if os.path.isdir(name) is False:
+        os.mkdir(name)
+    return name
+
+################# remote yelp related ops ######################
+def form_params(name, lat, lon):
+    print lat, lon
+    geo = '{},{}'.format(lat,lon)
+    params = { 'term':name, 'lang':'en', 'cll': geo}
+    if DEBUG:
+        print params
+    return params
+
+def fetch_pics(obj):
+# def fetch_pics(bid, name, city, lat, lon):
+    bid = obj['business_id']
+    name = obj['name']
+    city = obj['city']
+    lat = obj['latitude']
+    lon = obj['longitude']
+    params = form_params(name, lat, lon)
+    dir_name = mkdir(bid)
+
+    print params
+    resp = client.search(city, **params)
+    list_urls = []
+    for a in resp.businesses:
+        image_url = a.image_url
+        if image_url is not None:
+            image_url = image_url.replace('ms.jpg', 'o.jpg')
+            print a.id, a.name
+            list_urls.append(image_url)
+
+    count = 0 
+    for url in list_urls:
+        urllib.urlretrieve(url, "{}/{}.jpg".format(dir_name, count))
+        count += 1
+    DM("done fetching {} images in {}".format(len(list_urls), dir_name))
+    return bid
+
+################# yelp json related ops ######################
+def get_obj_business():
+    arr = []
+    with open(getfile(JSON_business)) as fin:
+        for line in fin:
+            obj = json.loads(line)
+            if len(obj['state']) == 2 and 'Restaurants' in obj['categories']:
+                arr.append(obj)
+    return arr
  
 def fetch_reviews():
     count = 0
@@ -188,7 +157,18 @@ def fetch_business():
             bus[bid] = obj
             r_bus[bid] = obj
     DM("done fetching business... {}".format(len(bus)))
+    return
 
+################# slide wrapper (execute only in main process) ######################
+def slide_worker(bid):
+    App(bid).run()
+    return
+
+bus = {}
+r_bus = RandomDict()
+users = {}
+
+################# slide wrapper (execute only in main process) ######################
 def get_obj_review():
     count = 0 
     jobs = []
@@ -242,15 +222,25 @@ def get_obj_review():
     target_bus = tmp_bus[new_list[choice]]
     target_bid = target_bus['business_id']
     print 'target is... ', target_bid
-    params = form_params(target_bus['name'], target_bus['latitude'],
-            target_bus['longitude'])
-    resp = client.search(target_bus['city'], **params)
-    for a in resp.businesses:
-        image_url = a.image_url
-        if image_url is not None:
-            image_url = image_url.replace('ms.jpg', 'o.jpg')
-            print a.id, a.name
-            print image_url
+
+    check_bid = fetch_pics(target_bus)
+    # bid = fetch_pics(bid, name, city, lat, lon)
+    # params = form_params(target_bus['name'], target_bus['latitude'],
+    #         target_bus['longitude'])
+    # resp = client.search(target_bus['city'], **params)
+    # for a in resp.businesses:
+    #     image_url = a.image_url
+    #     if image_url is not None:
+    #         image_url = image_url.replace('ms.jpg', 'o.jpg')
+    #         print a.id, a.name
+    #         print image_url
+    if check_bid != target_bid:
+        print "ERROR: bid has been changed...!" 
+        exit(-1)
+
+    # slide = mp.Process(name='slide', target=slide_worker, args=(target_bid, ))
+    # slide.start()
+    slide_worker(target_bid)
 
     ''' given busieness id (bid), find *users* who have written down the
     review'''
@@ -275,9 +265,10 @@ def get_obj_review():
                         except Exception as e:
                             # DNE
                             common_bids[common] = 1
-                        
     new_common_bids = sorted(common_bids.items(), key=lambda x: x[1], reverse=True)
-    # DM('common bids len: {}'.format(len(common_bids)))
+    # slide.join()
+
+    DM('common bids len: {}'.format(len(common_bids)))
     count = 0
     for k, v in new_common_bids:
         count += 1 
@@ -295,8 +286,6 @@ def get_obj_review():
         print count, 'count. {}'.format(0), bid, stars
         tmp_map[bid] = stars
         tmp_bus[bid] = obj
-
-
     
     return
 
@@ -336,7 +325,6 @@ OK let's do this... show 20 businesses w/ top review counts,
 upon select, fetch some picture... 
 move to next selection (try to find common set of reviewers...) 
 '''
-
 def main():
     get_obj_review()
     return 
@@ -430,86 +418,34 @@ def main():
             time.sleep(1)
     return
 
-    with io.open(json_business, encoding='utf8') as data:
-        parsed = json.load(data)
-        print parsed
 
-    fullpath = getfile(JSON_business)
-    json_pic = getfile(JSON_picture)
-    photos = []
-    businesses = []
-
-    with io.open(json_pic, encoding='utf8') as data:
-        pics = json.load(data)
-        print(pics)
-        #print(data[1]['business_id'])
-        photos = pics
-
-    for line in open(fullpath, 'r'):
-        businesses.append(json.loads(line))
-
-    businessesDictionary = dict()
-
-    for i in range(len(photos)):
-        #print(i, photos[i]['photo_id'])
-        #tempID = getBusinessID(businesses[i]['name'])
-        tempBusinessID = (photos[i]['business_id'])
-        tempPhotoID = (photos[i]['photo_id'])
-        insertIntoBusinessIDPhotoID(tempBusinessID, tempPhotoID, businessIDPhotoID)
-
-
-    for i in range(len(businesses)):
-        #print(i, businesses[i]['name'])
-        #tempID = getBusinessID(businesses[i]['name'])
-        tempID = (businesses[i]['business_id'])
-        insertIntoIDNames(tempID, businesses[i]['name'], IDNames)
-        insertIntoNamesID(tempID, businesses[i]['name'], namesID)
-        insertIntoBusinessIDStars(tempID, businesses[i]['stars'], businessIDStars)
-    return
-
-def fetch_pics(obj):
-    # bid = obj['business_id']
-    # name = obj['name']
-    # city = obj['city']
-    # lat = obj['latitude']
-    # lon = obj['longitutde']
+def debug():
     bid = "Y9e3DMJexlctd9pAudL-5A"
     name = "Papa John's Pizza"
     city = "Las Vegas"
     lat = 36.0211192
     lon = -115.1190908
+    start = time.time()
+    # bid = fetch_pics(bid, name, city, lat, lon)
+    end = time.time()
+    print ('Time taken: ', end - start)
+    App(bid).run()
 
-    params = form_params(name, lat, lon)
-    dir_name = mkdir(bid)
-
-    resp = client.search(city, **params)
-    list_urls = []
-    for a in resp.businesses:
-        image_url = a.image_url
-        if image_url is not None:
-            image_url = image_url.replace('ms.jpg', 'o.jpg')
-            print a.id, a.name
-            list_urls.append(image_url)
-
-    count = 0 
-    for url in list_urls:
-        urllib.urlretrieve(url, "{}/{}.jpg".format(dir_name, count))
-        count += 1
-    DM("done fetching {} images in {}".format(len(list_urls), dir_name))
-       
-def mkdir(bid):
-    cwd = os.getcwd()
-    if os.path.isdir(cwd + '/.tmp') is False:
-        os.mkdir(cwd + '/.tmp')
-    name = cwd + '/.tmp/'+ bid
-    if os.path.isdir(name) is False:
-        os.mkdir(name)
-    return name
+    bid = "deFBCKjvB6i3-LX12JlIuQ"
+    name = "Oyshi Sushi"
+    city = "Las Vegas"
+    lat = 36.1435827060002
+    lon = -115.251559111144
+    start = time.time()
+    bid = fetch_pics(bid, name, city, lat, lon)
+    end = time.time()
+    print ('Time taken: ', end - start)
+    bid = fetch_pics(bid, name, city, lat, lon)
+    App(bid).run()
 
 if __name__ == '__main__':
-    fetch_pics(None)
-    # mkdir("Y9e3DMJexlctd9pAudL-5A")
-    # main()
+    # debug()
+    main()
     # main_job = mp.Process(name='main', target=main)
     # main_job.start()
 
