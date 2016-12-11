@@ -128,6 +128,9 @@ def fetch_reviews():
     DM('fetching reviews...')
     with open(getfile(JSON_review)) as fin:
         for line in fin:
+#===> debugging...
+            if count > 100:
+                break
             obj = json.loads(line)
             bid = obj['business_id']
             uid = obj['user_id']
@@ -138,6 +141,7 @@ def fetch_reviews():
                 user_obj = User(uid)
             user_obj.add_bid(bid)
             users[uid] = user_obj
+            count += 1
     # TODO: optimize it via memoization (w/ slicing)
     DM('done fetching reviews...')
 
@@ -146,6 +150,9 @@ def fetch_business():
     DM("fetching businesses...")
     with open(getfile(JSON_business)) as fin:
         for line in fin:
+#===> debugging...
+            if count > 100:
+                break
             obj = json.loads(line)
             count += 1
             bid = obj['business_id']
@@ -163,8 +170,7 @@ bus = {}
 r_bus = RandomDict()
 users = {}
 
-################# prefetching stuff ######################
-# def prefetch(bus_list, bus_map): 
+
 
 ################# demo purpose CUI ops ######################
 ''' takes bus_list, return bus object'''
@@ -177,7 +183,8 @@ def show_list(bus_map):
         bid = k
         obj = v
         new_list.append(bid)
-        print count, obj['name'], obj['stars'], obj['review_count']
+        print "%2d. %s [%.1f, %d]" % (count, obj['name'], obj['stars'], \
+            obj['review_count'])
 
     # choice == bid for now...
     choice = 0
@@ -194,18 +201,59 @@ def show_list(bus_map):
     DM("{} {} {}".format(choice, bid, bus_obj))
     return bus_obj
  
-################# slide wrapper (execute only in main process) ######################
-def get_obj_review():
-    count = 0 
-    jobs = []
+################# prefetching stuff ######################
+'''TODO:
+    - heuristics:
+    0. stars
+    1. rating 
+    2. review_counts
+    3. common reviews'''
+def get_steroids(bus_map):
+    tmp_map = {}
+    for k, v in bus_map.items():
+        tmp_map[k] = v['stars']
 
+    new_tmp = sorted(tmp_map.items(), key=lambda x: x[1], reverse=True)
+    steroids = []
+    count = 0
+    for k,v in new_tmp:
+        # v is "stars" , k is bid
+        stars = v
+        obj = bus_map[k]
+        if stars > 2.0:
+        # if count < thrs:
+            steroids.append(obj)
+        count += 1
+
+    DM("Number of steroids: {}".format(count))
+    return steroids
+    
+def exec_steroids(steroids):
+    jobs = []
+    for obj in steroids:
+        t = Thread(name=obj['name'], target=fetch_pics, args=(obj, ))
+        jobs.append(t)
+        t.start()
+    return jobs
+
+
+################# slide wrapper (execute only in main process) ######################
+''' notes:
+originally, we wanted to construct a hierarchy where a user selects 
+    state -> city -> restaurants type
+but b/c dataset contains only limited types of restaurants, it's meaningless...
+OK let's do this... show 20 businesses w/ top review counts, 
+upon select, fetch some picture... 
+move to next selection (try to find common set of reviewers...) 
+'''
+def main():
     DM('initializing....')
+    count = 0 
     # mp.log_to_stderr(logging.DEBUG)
     # jobs.append(mp.Process(name='review', target=fetch_reviews))
     # jobs.append(mp.Process(name='business', target=fetch_business))
     # for p in jobs:
     #     p.start()
-    
     # for p in jobs:
     #     p.join()
     
@@ -213,7 +261,6 @@ def get_obj_review():
     fetch_business()
 
 ################ starting ..>! 
-    tmp_map = {}
     tmp_bus = {}
     count = 0
     while count < 15:
@@ -221,29 +268,12 @@ def get_obj_review():
         obj = r_bus.random_value()
         bid = obj['business_id']
         stars = obj['stars']
-        tmp_map[bid] = stars
         tmp_bus[bid] = obj
 
-    print '==============================================================='
-    new_tmp = sorted(tmp_map.items(), key=lambda x: x[1], reverse=True)
-    steroids = []
-    thrs = 5
-    count = 0
-    for k,v in new_tmp:
-        # v is "stars" 
-        bid = k
-        obj = tmp_bus[bid]
-        if v > 2.0:
-        # if count < thrs:
-            steroids.append(obj)
-        count += 1
-    
-    jobs = []
-    for obj in steroids:
-        t = Thread(name=obj['name'], target=fetch_pics, args=(obj, ))
-        jobs.append(t)
-        t.start()
+    steroids = get_steroids(tmp_bus)
+    jobs = exec_steroids(steroids)
 
+    print '==============================================================='
     target_bus = show_list(tmp_bus)
     target_bid = target_bus['business_id']
     DM("target selected is {}".format(target_bid))
@@ -260,9 +290,16 @@ def get_obj_review():
             print "ERROR: bid has been changed...!" 
             exit(-1)
 
+    ''' TODO: 
+    - multiprocessing:
+        1. fetching review & business concurrently
+        2. manager process for user interaction
+    '''
+
     # slide = mp.Process(name='slide', target=slide_worker, args=(target_bid, ))
     # slide.start()
     slide_worker(target_bid)
+# = = = = = == = = = == = =  == = = = == = == = = == = = == = = = == = = = =#
 
     ''' given busieness id (bid), find *users* who have written down the
     review'''
@@ -327,144 +364,11 @@ def get_obj_review():
         print k, v 
         if count > 100:
             return
- 
-    # with open(getfile(JSON_user)) as fin:
-    #     for line in fin:
-    #         obj = json.loads(line)
-    #         uid = obj['user_id']
-    #         count = 0 # obj['review_count']
-    #         users[uid] = count
-    # print 'done sorting users...', len(users)
-   
+  
     return
 
 
-''' notes:
-originally, we wanted to construct a hierarchy where a user selects 
-    state -> city -> restaurants type
-but b/c dataset contains only limited types of restaurants, it's meaningless...
-OK let's do this... show 20 businesses w/ top review counts, 
-upon select, fetch some picture... 
-move to next selection (try to find common set of reviewers...) 
-'''
-def main():
-    get_obj_review()
-    return 
-
-    IDNames = {} # (business_id, name)
-    namesID = {} # (name, business_id)
-    businessIDPhotoID = {} # (business_id, photo_id)
-    businessIDStars = {} # (business_id, stars)
-
-    arr_bus = get_obj_business()
-
-    states = []
-    for obj in arr_bus:
-        state = str(obj['state'])
-        if state not in states:
-            states.append(state)
-    states = sorted(states, key=str.lower)
-
-    print 'DEBUG', 'len(arr_bus): ', len(arr_bus)
-    print "We support only %d states for now, sorry :<" % (len(states))
-    tmp_c = 0
-    print '   ',
-    for s in states:
-        tmp_c += 1
-        print '%2d. %s ' % (tmp_c, s),
-        if tmp_c % 4 == 0:
-            print '\n   ',
-    choice = input("\nChoose one among the states: ")
-    state = states[choice - 1]
-    print 'choice: %s ' % (state) 
-
-    ############################################
-    cities = []
-    for obj in arr_bus:
-        if state == obj['state']:
-            city = str(obj['city'])
-            if city not in cities:
-                cities.append(city)
-    
-    if len(cities) < 1:
-        print ("No cities found in state of %s (shame on you..!)" % state)
-
-    cities = sorted(cities, key=str.lower)
-    print "We support only %d cities in %s for now, sorry :<" % \
-            (len(cities), state)
-    tmp_c = 0
-    print '   ',
-    for s in cities:
-        tmp_c += 1
-        print '%2d. %s ' % (tmp_c, s),
-        if tmp_c % 4 == 0:
-            print '\n   ',
-    choice = input("\nChoose one among the cities: ")
-    city = cities[choice - 1]
-    print 'choice: %s ' % (city) 
-
-    ############################################
-    cats = []
-    for obj in arr_bus:
-        if state == obj['state'] and city == obj['city']:
-            for category in obj['categories']:
-                cat = str(category)
-                if cat not in cats and cat != 'Restaurants':
-                    cats.append(cat)
-    
-    if len(cats) < 1:
-        print ("No cats found in %s, %s (shame on you..!)" % (city, state))
-
-    cats = sorted(cats, key=str.lower)
-    print "We support only %d categories in %s, %s for now, sorry :<" % \
-            (len(cats), city, state)
-    tmp_c = 0
-    # print_format = '{}d.'.format( max(cats, key=len)
-    print '   ',
-    for s in cats:
-        tmp_c += 1
-        print '%2d. %s ' % (tmp_c, s),
-        if tmp_c % 4 == 0:
-            print '\n   ',
-    choice = input("\nChoose one among the cities: ")
-    cat = cats[choice - 1]
-    print 'choice: %s ' % (cat) 
-    return
-
-    with open(getfile(JSON_review)) as fin:
-        for line in fin:
-            obj = json.loads(line)
-            bid = obj['business_id']
-            uid = obj['user_id']
-            print bid, uid
-            time.sleep(1)
-    return
-
-
-def debug():
-    bid = "Y9e3DMJexlctd9pAudL-5A"
-    name = "Papa John's Pizza"
-    city = "Las Vegas"
-    lat = 36.0211192
-    lon = -115.1190908
-    start = time.time()
-    # bid = fetch_pics(bid, name, city, lat, lon)
-    end = time.time()
-    print ('Time taken: ', end - start)
-    App(bid).run()
-
-    bid = "deFBCKjvB6i3-LX12JlIuQ"
-    name = "Oyshi Sushi"
-    city = "Las Vegas"
-    lat = 36.1435827060002
-    lon = -115.251559111144
-    start = time.time()
-    bid = fetch_pics(bid, name, city, lat, lon)
-    end = time.time()
-    print ('Time taken: ', end - start)
-    bid = fetch_pics(bid, name, city, lat, lon)
-    App(bid).run()
-
+##################### init ops stuff ##########################
 def init_clean():
     cwd = os.getcwd()
     folders = glob(cwd + "/.tmp/*")
