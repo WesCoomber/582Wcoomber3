@@ -5,14 +5,21 @@
 sudo pip install -e .
 ```
 
-You give the program a business_ID and/or business 'name' and then if the business has a star rating greater than or equal to the 'loadThreshold' value (def = 4.0), it will loadup/open 5 images from the business.
+## Usage
+### Basics
 
-#Set testBusinessID
-#Set testBusinessName
-to whatever you want.
+Make sure to download download the Yelp data from [here](LINK)
+```bash
+tar xvf dataset.tar 
+```
+### To run
+```bash
+./main.py  # takes ~ 5 mins to initialize the environments (b/c of datasize)
+==> select: # type the number to see business that's interesting to you
+# upon hit in steroid, launch slide of picture
+# otherwise, fetch the picture dynamically and launch slide of picture afterward.
+```
 
-The program requires this exact folder structure. SEE THE UPLOADED PICTURE 'http://imgur.com/a/smWSi'
+## Limitation
+don't know yet...
 
-Tested on windows10. May require changes for linux systems.
-
-#Youtube Video Demo of the program. 'https://www.youtube.com/watch?v=6JAsF_qBTj8&feature=youtu.be'

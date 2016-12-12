@@ -143,8 +143,8 @@ def fetch_reviews_opt(user_map, lines):
     DM('Process: {} {} {}'.format(mp.current_process().name, 'Starting', len(lines)))
     count = 0
     for line in lines:
-        if count > 30000:
-            return
+        # if count > 30000:
+        #     return
         obj = json.loads(line)
         bid = obj['business_id']
         uid = obj['user_id']
