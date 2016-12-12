@@ -89,6 +89,12 @@ def form_params(name, lat, lon):
     # DM("params: {}".format(params))
     return params
 
+'''Can we get the fileSize of the potential picture before actually downloading it? This could be useful in figuring out which pictures to prefetch!'''
+def getPotentialFileSize(blockCount, blockSize, fileSize):
+	amountDownloaded = blockSize * blockCount
+	percentDone = amountDownloaded / fileSize
+	print fileSize    
+
 def fetch_pics(obj):
     bid = obj['business_id']
     name = obj['name']
@@ -109,7 +115,8 @@ def fetch_pics(obj):
 
     count = 0 
     for url in list_urls:
-        urllib.urlretrieve(url, "{}/{}.jpg".format(dir_name, count))
+    	'''he third argument, if present, is a hook function that will be called once on establishment of the network connection and once after each block read thereafter. The hook will be passed three arguments; a count of blocks transferred so far, a block size in bytes, and the total size of the file. The third argument may be -1 on older FTP servers which do not return a file size in response to a retrieval request.'''
+        urllib.urlretrieve(url, "{}/{}.jpg".format(dir_name, count), getPotentialFileSize)
         count += 1
 
     if count < 10:
@@ -122,7 +129,7 @@ def fetch_pics(obj):
                 image_url = image_url.replace('ms.jpg', 'o.jpg')
                 list_urls.append(image_url)
         for url in list_urls:
-            urllib.urlretrieve(url, "{}/{}.jpg".format(dir_name, count))
+            urllib.urlretrieve(url, "{}/{}.jpg".format(dir_name, count), getPotentialFileSize)
             count += 1
 
 
