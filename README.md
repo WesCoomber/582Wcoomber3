@@ -1,6 +1,6 @@
 # 582Wcoomber3
 
-## Requirements
+## Install
 ```bash
 sudo pip install -e .
 ```
