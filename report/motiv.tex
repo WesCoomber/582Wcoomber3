@@ -1,0 +1,81 @@
+\section{Motivation}
+\label{sec:motiv}
+
+User\-oriented interactive  programs often take following sequence of execution:
+\begin{enumerate}
+\item Get query (input) from a user
+\item Compute the result, while a user anxiously waits for the result (``wait''
+time)
+\item Pause the program, for a user to ``think''
+\item Get next query from a user
+\end{enumerate}
+
+Previous works have exploited the ``think'' phase to speculatively compute future
+steps, whereas what we propose is by extracting the query at a  higher-level
+(i.e., finding the ultimate goal that users wish to accomplish with different
+data), then we can speculate in a more intelligent manner. 
+
+We achieve this way of speculation by constructing a model that probabilistically
+examines the next several steps within the program and user-interaction graph
+and then speculatively computes the most likely steps, based on this ``higher
+goal'' prediction. In this way, we remove the ``wait'' time by serving precomputed
+results. 
+
+The ultimate notion of speculation on steroids is to draw a general observation
+on arbitrary users' actions (choices) in a certain setting (e.g., undergraduate
+admissions versus graduate admissions). Speculation on a few selective steps
+ahead removes the overhead in precomputing all the possible choices as patterns
+over a dataset, and this speculative execution is similar to those over another
+distinct dataset. 
+
+Even if the model mis predicts choices, the worst case bound is to compute based
+on users' choice {\it just in time}, and that is essentially how interactive
+data analysis programs do so presently. So our proposed system would use excess
+resources to try and speed up future queries, and in the worst case it will
+perform equal to the traditional form of execution that starts after the user
+asks for it. 
+
+A short example of `speculation on steroids' is to take a simple
+user-interaction with a data-visualization program, that displays rates of
+seasonal flu-infection rates across the United States. This data comes from a
+remote store that is very far from the user's geographical location and thus
+there is a significant 15 to 30 second delay in requesting data and receiving
+data. In this example, users scroll their view of the map to the state of
+Michigan. From this clue, our speculation system would start preloading the more
+detailed epidemiology data for the major cities of Detroit, Ann Arbor, and
+Ypsilanti. Thus when the user finally zooms in and selects the city of Detroit,
+the city's data is displayed much more quickly than the about half minute delay
+to pull the data from the remote server.
+
+Carrying the example further, let us assume that Ann Arbor has a large
+population of people with the `B+' blood type, and that there is no blood type
+data for the city of Detroit. Many scientists are interested in investigating
+whether there is a connection between blood type and susceptibility to the
+virus. Let us also assume that we only have excess resources to pre-load the
+data for a single city. Based on the user's trace and historical traces through
+the program, we are inferring that the user is probably interested in (in
+preferential order): Detroit, Ann Arbor, and the relationship between blood-type
+and the flu. 
+
+In a traditional speculation system, the `dumb' system would simply predict that
+the user will most likely be interested in the biggest city in Michigan,
+Detroit, because it is first on our predicted `preference list' and the system
+would preload that city's data. However, our proposed higher-level system also
+infers the amount of `pre-work' that can be re-used in addition to the
+likely-hood of the pre-work being used. 
+
+In this system, a possibility for speculative execution, in this case preloading
+the detailed city data for Ann Arbor would be chosen for pre-work because even
+though the single probable chance that the user is interested in the city of Ann
+Arbor's data, is less than the chance that they are interested in Detroit, we
+can re-use the `mis-predicted' Ann Arbor data on the off-chance that the user is
+actually interested in the blood types of Michigan's cities. 
+
+Thus, despite the fact that `pre-work A' (Detroit data) is slightly more likely
+to be requested, we actually do `pre-work B' (Ann Arbor data) because the Ann
+Arbor data consists of data that is more-reusable. By taking a higher-level view
+of speculation we can choose to do pre-work that is more likely to be used, and
+also consider the amount of wasted pre-work that can be reused in the case of a
+mis-prediction.
+
+

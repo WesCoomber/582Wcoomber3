@@ -1,0 +1,51 @@
+\section{Introduction}
+\label{sec:intro}
+Increasing computing power and hardware specs have transformed users to expect
+instantaneous response upon their input. For instance, Shneiderman's work showed
+that the pace of human-computer interaction has a significant influence on the
+user's subjective experience and more importantly, their workflow (1984).
+However, there is an increasing reliance on increasingly larger data retrievals
+from geographically remote data stores. 
+
+One way to increase the speed of `user-facing data retrieval' is to use prior
+experience to predict what queries users may ask in the future, and then work on
+the pre-execution or execution of predicted queries in the background. If the
+speculation system predicted correctly, then before the user actually asks for
+the predicted query, the systems completes the output and/or pre-execution
+operations ahead of time and this results in the user experiencing snappier
+interaction with the application.
+
+The issue with this naive speculation is significant cost in the case of
+mis-prediction. That is, if underlying system frequently mis-predicts which data
+or queries that the user is going to ask for, then it ultimately ends up wasting
+a lot of work. A higher level approach to the problem allows us to write smarter
+pre-executed subqueries with two things in mind. 
+
+First, the speed of the individual subquery, and also the amount of work that
+can be repurposed and reused in case the system predicted incorrectly. This
+could potentially result in a system that considers individually slower queries,
+that are more general or reusable, which speeds up future queries. Thus we want
+to investigate what a `bigger-picture' system could do if it weighs both the
+speed of each individual query and also the overall speed of accomplishing the
+user's ultimate goal, e.g., what is the user ultimately trying to get done using
+several queries. 
+
+The idea of ``speculation on steroids'' is to observe a user's session, the
+user's context of thinking, and the semantics of their specific queries (e.g.,
+how many many people close my website before fully checking out and purchasing
+shoes). And then, based on this illustration of the user, to try and predict the
+user's high-level activities, i.e., user ultimately wants to know, what the
+customers think of their online-store, etc.
+
+Speculating across the many layers of the system to execute queries that are
+predicted to be relevant in the background. For example, predicting that the
+user will want the results of a query that reports on how many users close the
+website before finishing adding shoes to their shopping cart from the item
+page. 
+
+Another interesting feature of taking a higher level approach to a speculation
+system, is that we can pre-execute and/or execute queries in a way that can be
+shared across current and predicted queries to help save computation resources
+and to minimize the amount of work wasted in the case of a mis-prediction.
+
+

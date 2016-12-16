@@ -1,0 +1,55 @@
+% \documentclass[12pt]{article}
+\documentclass[preprint]{sig-alternate}
+% \documentclass[conference]{IEEEtran}
+
+\usepackage{fixacm} % ACM format change
+\usepackage[letterpaper,top=1in,bottom=1in,left=1in,right=1in]{geometry}
+\usepackage[square,comma,numbers,sort&compress]{natbib}
+\usepackage[breaklinks,colorlinks]{hyperref}
+\usepackage[usenames,dvipsnames]{color}
+\hypersetup{citecolor=blue,linkcolor=blue}
+\usepackage{amsmath,amsopn,amssymb}
+\usepackage{endnotes,microtype,xspace,graphicx,fancyvrb,multirow}
+\usepackage{pgfplots,epsfig,caption,subcaption}
+\let\labelindent\relax % stupid IEEE...
+\usepackage{enumitem}
+\usepackage{grffile}
+\usepackage{comment}
+% \usepackage{refcheck} % comment this out for final draft
+\usepackage{verbatim}
+% \usepackage{bigints}
+\usepackage{textcomp}
+\usepackage{url}
+\usepackage[T1]{fontenc}
+\usepackage{gensymb}
+% \usepackage{authblk} % comment this out for IEEE
+\usepackage{breakurl}
+
+\input{cmds}
+\date{}
+\toappear{EECS 582: ADVANCED OPERATING SYSTEMS (F’16)}
+
+\begin{document}
+\input{hdr}
+
+\maketitle
+\thispagestyle{empty}
+% \onecolumn
+% \setlength\parindent{0pt}
+\nocite{*}
+
+\input{abs}
+\input{intro}
+\input{motiv}
+\input{impl}
+
+\newpage
+%REF
+\bibliographystyle{abbrv}
+% \bibliographystyle{ieee}
+% {\footnotesize{
+  \bibliography{ref}
+% }}
+\balancecolumns
+
+\end{document}
