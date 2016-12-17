@@ -1,0 +1,11 @@
+Mickens, J. W., Elson, J., Howell, J., & Lorch, J. (2010, April). Crom: Faster Web Browsing Using Speculative Execution. In NSDI (Vol. 10, pp. 9-9).
+
+Patterson, R. H., Gibson, G. A., Ginting, E., Stodolsky, D., & Zelenka, J. (1995). Informed prefetching and caching (Vol. 29, No. 5, pp. 79-95). ACM.
+
+Korner, K. (1990, May). Intelligent caching for remote file service. In Distributed Computing Systems, 1990. Proceedings., 10th International Conference on (pp. 220-226). IEEE.
+
+Davison, B. D. (2001, June). Assertion: Prefetching with GET is not good. In Proceedings of the Sixth International Workshop on Web Caching and Content Distribution (WCW’01), Boston, MA.
+
+Pitkow, James, and Peter Pirolli. "Mininglongestrepeatin g subsequencestopredict worldwidewebsurfing." Proc. USENIX Symp. On Internet Technologies and Systems. 1999.
+
+Padmanabhan, V. N., & Mogul, J. C. (1996). Using predictive prefetching to improve world wide web latency. ACM SIGCOMM Computer Communication Review, 26(3), 22-36.
