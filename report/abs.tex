@@ -1,4 +1,36 @@
 \begin{abstract}
 \label{sec:abs}
-Put abstract here
+Traditional approach in hiding computational, I/O fetching or ``work'' latency
+is by simplifying the user-interface so that for each of an input by a user
+results in as small user-interactive work as possible. 
+This approach in hiding latency is widely adapted in user-interactive system
+such as mobile systems where user-experience is mainly ranked by visible work
+latency.
+However, the fundamental drawback in big-data analysis -- equipped with high
+computation, I/O, network latency --  presents a challenge for the existing
+approach. 
+
+As the volume of data located locally or in cloud exponentially grows, even a
+simple action by a user such as {\it sorting} in alphabetical order takes an
+order of minutes. 
+We expect this legging delay (work latency) between input by a user and output
+to user will increase in the era of Bigdata and Internet of Things where
+Terabytes of data are produced in every second. 
+In this report, we can reduce the work latency by ``speculating'' next steps
+that will be taken by a user in response to the output by given user inputs. 
+We achieve this by building statistical distribution called ``steroid'' that
+maintains probability of next possible inputs by user when output of current
+work is present to the user.
+
+We generalize this notion of {\it speculation on steroid} that develops online
+learning model at runtime in order to speculate which work is most likely to be
+executed by a user in next several program flows, and does ``pre-work'' required
+by next flows whilst waiting for completion of user-interacting tasks such as
+requesting an input, showing pictures.  
+We design, implement, and evaluate novel framework called {\it Pythia}, which
+dynamically builds steroid in a form of bi conditional tree that is dataset,
+program agnostic. 
+Toward the end, our prototype with Yelp dataset shows that by correctly,
+statistically speculating future non-deterministic program flows, {\it Pythia}
+improves 6x latency of fetching desired pictures from cloud datastore. 
 \end{abstract}
