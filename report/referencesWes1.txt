@@ -9,7 +9,7 @@
   publisher={ACM}
 }
 
-@inproceedings{mickens2010crom,
+@inproceedings{crom,
   title={Crom: Faster Web Browsing Using Speculative Execution.},
   author={Mickens, James W and Elson, Jeremy and Howell, Jon and Lorch, Jay},
   booktitle={NSDI},
@@ -19,7 +19,7 @@
 }
 
 
-@book{patterson1995informed,
+@book{diskio,
   title={Informed prefetching and caching},
   author={Patterson, R Hugo and Gibson, Garth A and Ginting, Eka and Stodolsky, Daniel and Zelenka, Jim},
   volume={29},
@@ -27,7 +27,7 @@
   year={1995},
   publisher={ACM}
 }
-@inproceedings{korner1990intelligent,
+@inproceedings{korner,
   title={Intelligent caching for remote file service},
   author={Korner, Kim},
   booktitle={Distributed Computing Systems, 1990. Proceedings., 10th International Conference on},
@@ -55,14 +55,14 @@
 
 
 
-@inproceedings{davison2001assertion,
+@inproceedings{davison,
   title={Assertion: Prefetching with GET is not good},
   author={Davison, Brian D},
   booktitle={Proceedings of the Sixth International Workshop on Web Caching and Content Distribution (WCW’01), Boston, MA},
   year={2001}
 }
 
-@inproceedings{pitkow1999mininglongestrepeatin,
+@inproceedings{pitkow,
   title={Mininglongestrepeatin g subsequencestopredict worldwidewebsurfing},
   author={Pitkow, James and Pirolli, Peter},
   booktitle={Proc. USENIX Symp. On Internet Technologies and Systems},
@@ -81,7 +81,7 @@
   publisher={ACM}
 } ACM SIGCOMM Computer Communication Review, 26(3), 22-36.
 
-@inproceedings{gunda2010nectar,
+@inproceedings{nectar,
   title={Nectar: Automatic Management of Data and Computation in Datacenters.},
   author={Gunda, Pradeep Kumar and Ravindranath, Lenin and Thekkath, Chandramohan A and Yu, Yuan and Zhuang, Li},
   booktitle={OSDI},
