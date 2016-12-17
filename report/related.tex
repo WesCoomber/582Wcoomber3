@@ -1,14 +1,68 @@
 \section{Related Works}
 \label{sec:related}
-The usage of speculative execution for reducing user-perceived latency has a significant history of research and study.  James Mickens, Elson, Howell, and Lorch's 
-'Crom' paper from NSDI 2010 explores the role of pre-fetching and speculative execution within the web application and distributed systems domain [1]. Their 'Crom' system allowed for a more-generalized pre-computation framework for the traditionally non-speculative javascript event handlers. By running a shadow clone of the user's browsing session and speculating on the shadow, if the user selects a speculated-upon browser context, then their system presents the precomputed result to the user's real web browser. Their results were promising, they showed that the background speculation overhead "easily fits within user think time", and that  speculative significant reduced user-perceived latencies (in this case from 3,427 ms to 399 ms).
+The usage of speculative execution for reducing user-perceived latency has a
+significant history of research and study. 
+Mickens, {\it et al}. propos in system Crom that 
+explores the role of pre-fetching and speculative execution within the web
+application and distributed systems domain~\cite{crom}. Crom allows for a
+more-generalized pre-computation framework for the traditionally non-speculative
+javascript event handlers. By running a shadow clone of the user's browsing
+session and speculating on the shadow, if the user selects a speculated-upon
+browser context, then their system presents the precomputed result to the user's
+real web browser. Their results were promising, they showed that the background
+speculation overhead ``easily fits within user think time'', and that  speculative
+significant reduced user-perceived latencies (in this case from 3,427 ms to 399
+ms).
 
-Patterson's 1997 paper examined the use of speculative prefetching and caching to hide disk IO time [2]. The authors create a system that asks applications to disclose their access patterns and uses this information to batch I/O, exploit I/O parallelism, and to dynamically prefetch data from the disk to main memory. Patterson's specialized system had promising results with an up to 36 percent speed up on application run-time and with an average speed of 13 percent speed-up across all the tested applications. Korner's 1990 paper investigated the usage of intelligent file caching for a remote distributed file service to reduce and hide the significant network latencies inherent in the remote file system [3]. Along the same lines as the Korner work on hiding network latencies, Davison's 2001 paper explored the current benefits of web cache prefetching, the broad issues and side effects that plague the current approach, and proposes suggestions to alleviate these issues and side effects [4].
+Patterson, and {\it et al}. study the use of speculative prefetching and caching
+to hide disk IO time~\cite{diskio}.  The authors create a system that asks
+applications to disclose their access patterns and uses this information to
+batch I/O, exploit I/O parallelism, and to dynamically prefetch data from the
+disk to main memory. The system specialized system had promising results with an
+up to 36 percent speed up on application run-time and with an average speed of
+13 percent speed-up across all the tested applications. 
+Korner, and {\it et al}. investigate the usage of intelligent file caching for a
+remote distributed file service to reduce and hide the significant network
+latencies inherent in the remote file system~\cite{korner}.
+Along the same lines on hiding network latencies, Davison, and {\it et al}. explore
+the current benefits of web cache prefetching, the broad issues and side effects
+that plague the current approach, and proposes suggestions to alleviate these
+issues and side effects~\cite{davison}.
 
-In Davison's paper "Assertion: Prefecthing with GET Is Not Good" states that traditional file system and memory system caching frameworks don't apply well to the web caching domain because of a few key unique attributes of the domain space. Web objects have a variable and unknown cacheability which complicates the determination of which objects to pre-cache, web servers are vulnerable to over-commitment in the case of too many users pre-fetching a significant amount of web objects, and the usage of GET for object retrieval is inherently flawed because of the numerous side effects for the content owner and the intendded content receipient.
+The paper~\cite{davison} states that traditional file system and memory system
+caching frameworks don't apply well to the web caching domain because of a few
+key unique attributes of the domain space. Web objects have a variable and
+unknown cache-ability which complicates the determination of which objects to
+pre-cache, web servers are vulnerable to over-commitment in the case of too many
+users pre-fetching a significant amount of web objects, and the usage of GET for
+object retrieval is inherently flawed because of the numerous side effects for
+the content owner and the intended content recipients.
 
-James Pitkow and Peter Pirolli from Xerox PARC authored a work  on the extraction of a prediction model for user web-surfing paths from a large amount of historical user-traces through their system [5]. The researchers demonstratred that Kth order Markov Models and N-grams can both efficiently store and represent user's paths. Their results showed that a model prediction accuracy can be significantly improved by storing longer path dependencies at the cost of increased storage space. Their paper also explores the usage of longest repeating sequences, or LRS, to reduce the complexity and storage space needed for stored paths.
+Pitkow, and {\it et al}. propose a system on the extraction of a prediction
+model for user web-surfing paths from a large amount of historical user-traces
+through their system~\cite{pitkow}. The authors demonstrate that K-th order
+Markov Models and N-grams can both efficiently store and represent user's paths.
+The results showed that a model prediction accuracy can be significantly
+improved by storing longer path dependencies at the cost of increased storage
+space. The paper also explores the usage of longest repeating sequences, or
+LRS, to reduce the complexity and storage space needed for stored paths.
 
-In their 1996 paper, Venkata N. Padmanabhan and Jeffrey C. Mogul, dynamically examines the server-collected statistics amount typical client access and requests to create prefetching behavior hints for the server's respective clients [6]. Their results show that their user trace-driven predictions for prefetching significantly reduces the average access time for both high-bandwidth and low-bandwidth clients. They noted that the improvement in web object access time also incurred the cost of increased network traffic. Thus another piece of evidence for the argument that generalized execution should allow developers to easily exchange excess resources (network, disk, memory) for a benefit towards file request and access-response time.
+Furthermore, Padmanabhan, and {\it et al}. propose a way to dynamically examine
+the server-collected statistics amount typical client access and
+requests to create prefetching behavior hints for the server's respective
+clients~\cite{padmanabhan}.  The results show that their user trace-driven
+predictions for prefetching significantly reduces the average access time for
+both high-bandwidth and low-bandwidth clients. They noted that the improvement
+in web object access time also incurred the cost of increased network traffic.
+Thus another piece of evidence for the argument that generalized execution
+should allow developers to easily exchange excess resources (network, disk,
+memory) for a benefit towards file request and access-response time.
 
-The work, "Nectar: Automatic Management of Data and Computation in Datacenters", by Pradeep Kumar Gunda, et al. carried on this motivation for a higher-level view of computation and speculative 'pre-work'. In the paper, Pradeep, Ravindratnath, Thekkath, Yu, and Zhuang designed and implemented a system that more intelligently manages data and computation within the data-center computing environment. Their Nectar system uses the unification of the concepts of data and computation by tagging and associating data with its respective computation. This allows for the automated management of data access, computation budget, and the caching service that is shared across the datacenter.  The key insight that Gunda et al. 
+Recent system called {\it Nectar}~\cite{nectar} carries on this motivation for a
+higher-level view of computation and speculative `pre-work'. In the paper, the
+authors design and implement a system that more intelligently manages data and
+computation within the data-center computing environment. Nectar uses the
+unification of the concepts of data and computation by tagging and associating
+data with its respective computation. This allows for the automated management
+of data access, computation budget, and the caching service that is shared
+across the datacenter.  The key insight that Gunda et al. 
