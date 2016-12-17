@@ -19,8 +19,8 @@ Terabytes of data are produced in every second.
 In this report, we can reduce the work latency by ``speculating'' next steps
 that will be taken by a user in response to the output by given user inputs. 
 We achieve this by building statistical distribution called ``steroid'' that
-maintains probability of next possible inputs by user when output of current
-work is present to the user.
+maintains individual probability of next possible inputs by user when output of
+current work is present to the user.
 
 We generalize this notion of {\it speculation on steroid} that develops online
 learning model at runtime in order to speculate which work is most likely to be
@@ -28,8 +28,8 @@ executed by a user in next several program flows, and does ``pre-work'' required
 by next flows whilst waiting for completion of user-interacting tasks such as
 requesting an input, showing pictures.  
 We design, implement, and evaluate novel framework called {\it Pythia}, which
-dynamically builds steroid in a form of bi conditional tree that is dataset,
-program agnostic. 
+dynamically builds steroid in a form of bi-conditional probability tree that is
+dataset, program agnostic. 
 Toward the end, our prototype with Yelp dataset shows that by correctly,
 statistically speculating future non-deterministic program flows, {\it Pythia}
 improves 6x latency of fetching desired pictures from cloud datastore. 

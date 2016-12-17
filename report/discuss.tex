@@ -1,41 +1,47 @@
 \section{Discussion}
 \label{sec:discuss}
+In this section, we discuss about the general thoughts behind design and
+implementation of our framework {\it Pythia}.
+
 Our system abstracts the idea of speculative execution to the more general idea
-of {\it pre-works}. Across many domain spaces, speculative execution can entail many
-different things such as pre-fetching from hard disk to memory, pre-fetching
-the results of a predicted query from a remote web server, and pre-computing
-the results of a predicted query on local data. This causes unnecessary
-complication and complexity for the application developers who are interested in
-using excess resources to do some work ahead-of-time. Pre-works are a
-higher-level concept that encompasses all of the aforementioned speculative
-execution use-cases and also considers more abstract concepts such as the
-`potential reusability' of pre-works and the system's current excess
-resources. By thinking of pre-works as a tool to trade excess resources for
-improved responsiveness and improved user-experience, we can more easily apply
+of {\it pre-work}s. 
+Across many domain spaces, speculative execution can entail many different
+things such as pre-fetching from hard disk to memory, pre-fetching the results
+of a predicted query from a remote web server, and pre-computing the results of
+a predicted query on local data. 
+This causes unnecessary complication and complexity for the application
+developers who are interested in using excess resources to do some work
+ahead-of-time. 
+
+Pre-works are a higher-level concept that encompasses not only the aforementioned
+speculative execution use-cases but also considers more abstract concepts such
+as the `potential reusability' of pre-works and the system's current excess
+resources. 
+Thus, {\it Pythia} is a framework that trades excess resources for
+improved responsiveness and improved user-experience, thereby applying 
 speculative execution to many different applications.
 
-Due to the limited time-constraints of this class, our class project had
-limited scope with regards to the original higher-level idea of `Speculation
-on Steroids'. One limitation of our current work is that the speculation only
-happens with our single implemented application. One of the core-motivations
-behind the project, was to create a generic speculation framework that
-provides significant benefit across many diverse applications. To have more
-evidence of our system providing this `general speculation framework', we
-would like to test our system across multiple applications and then benchmark
-the performance on each application. 
+% Due to the limited time-constraints of this class, our class project had
+% limited scope with regards to the original higher-level idea of `Speculation
+% on Steroids'. One limitation of our current work is that the speculation only
+% happens with our single implemented application. One of the core-motivations
+% behind the project, was to create a generic speculation framework that
+% provides significant benefit across many diverse applications. To have more
+% evidence of our system providing this `general speculation framework', we
+% would like to test our system across multiple applications and then benchmark
+% the performance on each application. 
 
-Another limitation of the project was the difficulty in finding real data sets
-of user’s traces through an application. We spent the first half of the
-semester trying to find public and/or academic datasets from Google, Facebook,
-and Microsoft to no avail. Ultimately, we settled on using the academic Yelp
-data-set as a candidate application for generalized speculation, but because
-we didn’t have exact user-traces through their application, we still
-encountered some issues with this approach. 
+% Another limitation of the project was the difficulty in finding real data sets
+% of user’s traces through an application. We spent the first half of the
+% semester trying to find public and/or academic datasets from Google, Facebook,
+% and Microsoft to no avail. Ultimately, we settled on using the academic Yelp
+% data-set as a candidate application for generalized speculation, but because
+% we didn’t have exact user-traces through their application, we still
+% encountered some issues with this approach. 
 
-We ended up having to utilize an analogous heuristic composed of the
-restaurant’s ratings and common reviewers shared between restaurants-- instead
-of exact user’s paths through the program. This let us implement an interactive
-system in time for the class, but also limits the conclusions we can derive from
-the system because it is another level of abstraction from the true generalized
-speculation based on user-traces that our original idea proposed.
-
+% We ended up having to utilize an analogous heuristic composed of the
+% restaurant’s ratings and common reviewers shared between restaurants-- instead
+% of exact user’s paths through the program. This let us implement an interactive
+% system in time for the class, but also limits the conclusions we can derive from
+% the system because it is another level of abstraction from the true generalized
+% speculation based on user-traces that our original idea proposed.

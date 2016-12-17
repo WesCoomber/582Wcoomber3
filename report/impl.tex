@@ -1,5 +1,90 @@
 \section{Design}
 \label{sec:design}
+In this section, we explain and justify design choices, and consider inherent
+limitations in our design choices.
 
+% \subsection{Steroid}
+We believe that steroid - bi-conditional probability tree - must be as generic
+as applicable to an arbitary set of data, programs, and users; 
+however, due to the scope of this project and limited time constrained fractors,
+we have only implemented rank-based steroid, that considers only top N choices.
+
+\subsection{Bi-conditional probability tree}
+Bi-conditional by definition takes account of ``if this, and that'' model. 
+That is, given current job initiated by user input (if this), find the probability of next
+step(s) (and that). 
+We believe that bi-conditional probability neatly fits into our need as we aim
+to predict next steps from present step, not all possible steps.
+Furthermore, traces of steps taken by a user influences the prediction of next
+run by another user.
+
+In other words, bi-conditional probability reveals a trend over series of steps
+by users and outputs the best candidate of next step(s) by current user by
+observing 1) current and previous step(s), and 2) other users' traces, which
+is why we note as `bi-'.
+For instance, there are two distinct graduate school committee members - Alice
+and Bob - attempt to list the best candidates with different criteria.  If Alice
+so far sorted the columns by last name, and if Bob already finished his
+reviewing by sorting students by first and last name, GRE scores, our steroid
+predicts that Alice has a high probability of sorting students by GRE scroes in
+the future.  From this steroid, our framework attempts to pre-work
+asynchoronously (sorting columns by GRE scores in this example) while Alice is
+still looking over the list of students sorted by last name. 
+
+We have found that tree-like structure is a perfect match for user-facing
+application and to build steroids. So, on top of distributin of bi-conditional
+probability, we have built tree structure, in which each node represents an
+action initiated by a user input and maintains prior probability distribution
+that led to the node. 
+
+Tree-like structure gives another benefit: a rollback recovery. Often, user
+mis-clicks certain inputs and has to wait for significant time, as the work
+already has been initated, in order to rollback to previous state. 
+Tree-like structure in our framework maintains shallow copy for each nodes that
+allows fast recovery to previous state if 1) user unintentionally enters wrong
+input, and 2) when speculation is missed. 
+
+The former case may be an application-specific as a few applications already
+handle this case by prompting confirm button or aborts the mis-entered job.
+However, the later case without tree-like structure not only imposes a hard
+penality by wasting resources in mis-speculated jobs but also requires to
+re-work all the steps taken by a user from entry to one before mis-speculation.
+Tree-like strcuture provides easy rollback recovery with negligible cost in
+terms of resources and latency.
+
+\subsection{Limitation}
+The drawback of bi-conditional probability tree is that in order to build
+precise enough tree,  large volume of user traces in similar category of
+applications or users interacting with similar dataset is necessary.
+As explained in later section~\ref{sec:impl}, we have not found publicly
+available users traces that we can construct the tree with high speculation hit.
+
+This limitation also hinders our framework in terms of performance: because the
+large of volume of user traces needs to be analyzed at runtime, even single miss
+in speculation exceeds the latency improvement by pre-works. 
+As discussed in section~\ref{sec:future}, we plan to investigate a way to
+transform tree builiding in offline and even escalate the absraction of steroid
+to higher level, such that application domain-specific knowledge acts a
+``tunning'' to improve the hit ratio in speculation.
+
+% Joseph: simply remove below section if time runs out...
 \section{Implementation}
 \label{sec:impl}
+In this section, we discuss current implementation in details.
+We have implemented somewhat data-specific steroid due to the scope of this
+project, time constrained factors, and most importantly, lack of real-world
+user traces as mentioned in previous section. 
+
+The steroid built for Yelp dataset takes the following heuristics to calculate
+the probability of each restaurants selected by an user: user-rating, stars,
+review counts, and common subset users who reviewed restaurant in common and also
+reviewed another restaurant. 
+
+After builing the steroid, we have speculation phase that for each of user
+selection, outputs distribution of probability in next steps and executes works
+required in likely future steps. 
+This is very similar to MapReduce frameworks, but we believe that it is
+different as there is only one selection available in analogy to Map phase. 
+
+
+
