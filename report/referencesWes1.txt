@@ -1,3 +1,14 @@
+@article{shneiderman1984response,
+  title={Response time and display rate in human performance with computers},
+  author={Shneiderman, Ben},
+  journal={ACM Computing Surveys (CSUR)},
+  volume={16},
+  number={3},
+  pages={265--285},
+  year={1984},
+  publisher={ACM}
+}
+
 @inproceedings{mickens2010crom,
   title={Crom: Faster Web Browsing Using Speculative Execution.},
   author={Mickens, James W and Elson, Jeremy and Howell, Jon and Lorch, Jay},
@@ -24,6 +35,24 @@
   year={1990},
   organization={IEEE}
 }
+
+@inproceedings{wester2011operating,
+  title={Operating system support for application-specific speculation},
+  author={Wester, Benjamin and Chen, Peter M and Flinn, Jason},
+  booktitle={Proceedings of the sixth conference on Computer systems},
+  pages={229--242},
+  year={2011},
+  organization={ACM}
+}
+
+@inproceedings{alspaugh2014analyzing,
+  title={Analyzing log analysis: An empirical study of user log mining},
+  author={Alspaugh, Sara and Chen, Beidi and Lin, Jessica and Ganapathi, Archana and Hearst, Marti and Katz, Randy},
+  booktitle={28th Large Installation System Administration Conference (LISA14)},
+  pages={62--77},
+  year={2014}
+}
+
 
 
 @inproceedings{davison2001assertion,
@@ -59,4 +88,33 @@
   volume={10},
   pages={1--8},
   year={2010}
+}
+
+
+@inproceedings{alspaugh2014analyzing,
+  title={Analyzing log analysis: An empirical study of user log mining},
+  author={Alspaugh, Sara and Chen, Beidi and Lin, Jessica and Ganapathi, Archana and Hearst, Marti and Katz, Randy},
+  booktitle={28th Large Installation System Administration Conference (LISA14)},
+  pages={62--77},
+  year={2014}
+}
+
+@book{jefferson1987time,
+  title={Time warp operating system},
+  author={Jefferson, David and Beckman, Brian and Wieland, Frederick and Blume, Leo and DiLoreto, Mike},
+  volume={21},
+  number={5},
+  year={1987},
+  publisher={ACM}
+}
+
+@article{jayachandran2014combining,
+  title={Combining user interaction, speculative query execution and sampling in the DICE system},
+  author={Jayachandran, Prasanth and Tunga, Karthik and Kamat, Niranjan and Nandi, Arnab},
+  journal={Proceedings of the VLDB Endowment},
+  volume={7},
+  number={13},
+  pages={1697--1700},
+  year={2014},
+  publisher={VLDB Endowment}
 }
